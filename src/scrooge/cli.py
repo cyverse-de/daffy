@@ -9,7 +9,16 @@ import sys
 import threading
 from collections.abc import Sequence
 
-from scrooge.config import ScroogeConfig, build_config
+from scrooge.config import (
+    DEFAULT_DB_PATH,
+    DEFAULT_QUACK_HOST,
+    DEFAULT_QUACK_PORT,
+    DEFAULT_RETENTION_ROWS,
+    DEFAULT_STORAGE_DIR,
+    DEFAULT_SWEEP_INTERVAL,
+    ScroogeConfig,
+    build_config,
+)
 from scrooge.server import ScroogeServer
 
 log = logging.getLogger("scrooge")
@@ -20,13 +29,38 @@ def _parse_args(args: list[str]) -> argparse.Namespace:
         prog="scrooge",
         description="Aggregate logs shipped by daffy instances; archive older logs to Parquet.",
     )
-    parser.add_argument("--db", dest="db_path", help="aggregator DuckDB path (or SCROOGE_DB)")
-    parser.add_argument("--storage-dir", help="Parquet archive root (or SCROOGE_STORAGE_DIR)")
-    parser.add_argument("--quack-host", help="Quack bind host (or SCROOGE_QUACK_HOST)")
-    parser.add_argument("--quack-port", type=int, help="Quack bind port (or SCROOGE_QUACK_PORT)")
-    parser.add_argument("--token", help="fixed Quack auth token (prefer SCROOGE_TOKEN)")
-    parser.add_argument("--retention-rows", type=int, help="per-service live row threshold (or SCROOGE_RETENTION_ROWS)")
-    parser.add_argument("--sweep-interval", type=float, help="seconds between retention sweeps (or SCROOGE_SWEEP_INTERVAL)")
+    parser.add_argument(
+        "--db",
+        dest="db_path",
+        help=f"aggregator DuckDB path (or SCROOGE_DB; default: {DEFAULT_DB_PATH})",
+    )
+    parser.add_argument(
+        "--storage-dir",
+        help=f"Parquet archive root (or SCROOGE_STORAGE_DIR; default: {DEFAULT_STORAGE_DIR})",
+    )
+    parser.add_argument(
+        "--quack-host",
+        help=f"Quack bind host (or SCROOGE_QUACK_HOST; default: {DEFAULT_QUACK_HOST})",
+    )
+    parser.add_argument(
+        "--quack-port",
+        type=int,
+        help=f"Quack bind port (or SCROOGE_QUACK_PORT; default: {DEFAULT_QUACK_PORT})",
+    )
+    parser.add_argument(
+        "--token",
+        help="fixed Quack auth token (prefer SCROOGE_TOKEN; default: random per boot)",
+    )
+    parser.add_argument(
+        "--retention-rows",
+        type=int,
+        help=f"per-service live row threshold (or SCROOGE_RETENTION_ROWS; default: {DEFAULT_RETENTION_ROWS})",
+    )
+    parser.add_argument(
+        "--sweep-interval",
+        type=float,
+        help=f"seconds between retention sweeps (or SCROOGE_SWEEP_INTERVAL; default: {DEFAULT_SWEEP_INTERVAL})",
+    )
     return parser.parse_args(args)
 
 

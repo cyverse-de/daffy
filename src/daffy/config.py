@@ -9,6 +9,7 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 
+DEFAULT_LOCAL_DB = ":memory:"
 DEFAULT_FLUSH_BYTES = 1_000_000
 DEFAULT_FLUSH_INTERVAL = 5.0
 DEFAULT_MAX_BUFFER_BYTES = 50_000_000
@@ -76,7 +77,7 @@ def build_config(
 
     return Config(
         service=resolved_service,
-        local_db=_resolve("DAFFY_LOCAL_DB", local_db, ":memory:") or ":memory:",
+        local_db=_resolve("DAFFY_LOCAL_DB", local_db, DEFAULT_LOCAL_DB) or DEFAULT_LOCAL_DB,
         pod=_resolve("POD_NAME", pod),
         node=_resolve("NODE_NAME", node),
         scrooge_uri=_resolve("SCROOGE_URI", scrooge_uri),
