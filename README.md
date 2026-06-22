@@ -24,8 +24,9 @@ uv run daffy --help
 uv run scrooge --help
 ```
 
-`uv run` is used in the examples below; in a built container image `daffy`/`scrooge` are
-the entrypoints, so you pass just their arguments.
+`uv run` is used in the examples below. The container image puts both commands on `PATH`,
+so you pick one at run time: `docker run <image> daffy ...` or
+`docker run <image> scrooge ...` (see [Container image](#container-image)).
 
 ## daffy
 
@@ -118,4 +119,19 @@ uv run pytest            # tests
 ```
 
 The `Justfile` wraps these: `just check` runs ruff + pyright + pytest, and
-`just build-daffy-image` / `just build-scrooge-image` build the container images.
+`just build-image` builds the container image.
+
+## Container image
+
+A single image runs both binaries; pick the command at run time. Build it with
+`just build-image` (or `docker build -t daffy .`), then:
+
+```
+# daffy as a process wrapper
+docker run --rm -e SCROOGE_TOKEN=dev-token daffy \
+      daffy --service demo --scrooge-uri quack:scrooge-host:9494 -- my-server
+
+# scrooge aggregator (mount /data to persist the DuckDB + Parquet archive)
+docker run --rm -p 9494:9494 -e SCROOGE_TOKEN=dev-token -v scrooge-data:/data daffy \
+      scrooge --quack-port 9494
+```

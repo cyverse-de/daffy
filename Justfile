@@ -23,10 +23,6 @@ test:
 # Lint, type-check, and test.
 check: lint typecheck test
 
-# Build the daffy process-wrapper image.
-build-daffy-image tag="daffy:latest":
-    docker build --network host -f Dockerfile.daffy -t {{tag}} .
-
-# Build the Scrooge aggregator image.
-build-scrooge-image tag="scrooge:latest":
-    docker build --network host -f Dockerfile.scrooge -t {{tag}} .
+# Build the container image (runs both daffy and scrooge; pick the command at run time).
+build-image tag="daffy:latest":
+    docker build --network host -t {{tag}} .
