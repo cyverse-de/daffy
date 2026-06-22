@@ -10,9 +10,9 @@ import os
 from dataclasses import dataclass
 
 DEFAULT_LOCAL_DB = ":memory:"
-DEFAULT_FLUSH_BYTES = 1_000_000
+DEFAULT_FLUSH_ROWS = 1_000
 DEFAULT_FLUSH_INTERVAL = 5.0
-DEFAULT_MAX_BUFFER_BYTES = 50_000_000
+DEFAULT_MAX_BUFFER_ROWS = 100_000
 
 
 def _resolve(env_name: str, flag_value: str | None, default: str | None = None) -> str | None:
@@ -50,9 +50,9 @@ class Config:
     node: str | None
     scrooge_uri: str | None
     scrooge_token: str | None
-    flush_bytes: int
+    flush_rows: int
     flush_interval: float
-    max_buffer_bytes: int
+    max_buffer_rows: int
 
     @property
     def shipping_enabled(self) -> bool:
@@ -67,9 +67,9 @@ def build_config(
     node: str | None,
     scrooge_uri: str | None,
     scrooge_token: str | None,
-    flush_bytes: int | None,
+    flush_rows: int | None,
     flush_interval: float | None,
-    max_buffer_bytes: int | None,
+    max_buffer_rows: int | None,
 ) -> Config:
     resolved_service = _resolve("SERVICE_NAME", service)
     if not resolved_service:
@@ -82,11 +82,11 @@ def build_config(
         node=_resolve("NODE_NAME", node),
         scrooge_uri=_resolve("SCROOGE_URI", scrooge_uri),
         scrooge_token=_resolve("SCROOGE_TOKEN", scrooge_token),
-        flush_bytes=_resolve_int("DAFFY_FLUSH_BYTES", flush_bytes, DEFAULT_FLUSH_BYTES),
+        flush_rows=_resolve_int("DAFFY_FLUSH_ROWS", flush_rows, DEFAULT_FLUSH_ROWS),
         flush_interval=_resolve_float(
             "DAFFY_FLUSH_INTERVAL", flush_interval, DEFAULT_FLUSH_INTERVAL
         ),
-        max_buffer_bytes=_resolve_int(
-            "DAFFY_MAX_BUFFER_BYTES", max_buffer_bytes, DEFAULT_MAX_BUFFER_BYTES
+        max_buffer_rows=_resolve_int(
+            "DAFFY_MAX_BUFFER_ROWS", max_buffer_rows, DEFAULT_MAX_BUFFER_ROWS
         ),
     )

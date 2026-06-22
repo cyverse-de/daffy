@@ -30,14 +30,6 @@ def test_insert_many_empty_is_noop() -> None:
     store.close()
 
 
-def test_pending_bytes_tracks_messages() -> None:
-    store = LogStore()
-    assert store.pending_bytes() == 0
-    store.insert_many([_rec("hello"), _rec("worldly")])
-    assert store.pending_bytes() == len("hello") + len("worldly")
-    store.close()
-
-
 def test_round_trip_columns() -> None:
     store = LogStore()
     store.insert_many([_rec('{"level":"info"}', level="info", fields='{"level":"info"}')])

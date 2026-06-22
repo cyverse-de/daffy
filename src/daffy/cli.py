@@ -10,10 +10,10 @@ import sys
 from collections.abc import Sequence
 
 from daffy.config import (
-    DEFAULT_FLUSH_BYTES,
     DEFAULT_FLUSH_INTERVAL,
+    DEFAULT_FLUSH_ROWS,
     DEFAULT_LOCAL_DB,
-    DEFAULT_MAX_BUFFER_BYTES,
+    DEFAULT_MAX_BUFFER_ROWS,
     Config,
     build_config,
 )
@@ -49,9 +49,9 @@ def _parse_args(args: list[str]) -> argparse.Namespace:
     )
     parser.add_argument("--scrooge-token", help="Scrooge auth token (prefer SCROOGE_TOKEN)")
     parser.add_argument(
-        "--flush-bytes",
+        "--flush-rows",
         type=int,
-        help=f"flush when buffered bytes exceed this (or DAFFY_FLUSH_BYTES; default: {DEFAULT_FLUSH_BYTES})",
+        help=f"flush when buffered rows reach this (or DAFFY_FLUSH_ROWS; default: {DEFAULT_FLUSH_ROWS})",
     )
     parser.add_argument(
         "--flush-interval",
@@ -59,9 +59,9 @@ def _parse_args(args: list[str]) -> argparse.Namespace:
         help=f"max seconds between flushes (or DAFFY_FLUSH_INTERVAL; default: {DEFAULT_FLUSH_INTERVAL})",
     )
     parser.add_argument(
-        "--max-buffer-bytes",
+        "--max-buffer-rows",
         type=int,
-        help=f"drop oldest beyond this when Scrooge is down (or DAFFY_MAX_BUFFER_BYTES; default: {DEFAULT_MAX_BUFFER_BYTES})",
+        help=f"drop oldest beyond this many rows when Scrooge is down (or DAFFY_MAX_BUFFER_ROWS; default: {DEFAULT_MAX_BUFFER_ROWS})",
     )
     return parser.parse_args(args)
 
@@ -74,9 +74,9 @@ def _config_from_args(ns: argparse.Namespace) -> Config:
         node=ns.node,
         scrooge_uri=ns.scrooge_uri,
         scrooge_token=ns.scrooge_token,
-        flush_bytes=ns.flush_bytes,
+        flush_rows=ns.flush_rows,
         flush_interval=ns.flush_interval,
-        max_buffer_bytes=ns.max_buffer_bytes,
+        max_buffer_rows=ns.max_buffer_rows,
     )
 
 

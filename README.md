@@ -31,9 +31,9 @@ the entrypoints, so you pass just their arguments.
 
 `daffy` wraps any process, teeing its stdout/stderr to the console (so `kubectl logs` and
 similar still work) **and** recording each line to a local DuckDB buffer. The buffer is
-bounded: lines accrue until a size threshold (or interval) triggers a batch flush to
+bounded: lines accrue until a row-count threshold (or interval) triggers a batch flush to
 Scrooge, after which the flushed rows are deleted locally. If Scrooge is unreachable the
-rows are retained and retried; if the buffer exceeds its cap the oldest rows are dropped.
+rows are retained and retried; if the buffer exceeds its row cap the oldest rows are dropped.
 
 ```
 uv run daffy --service my-svc \
@@ -45,7 +45,7 @@ Everything after `--` is the wrapped command and its arguments.
 
 Configuration is resolved env-first with CLI-flag fallback: `SERVICE_NAME`,
 `DAFFY_LOCAL_DB`, `POD_NAME`, `NODE_NAME`, `SCROOGE_URI`, `SCROOGE_TOKEN`,
-`DAFFY_FLUSH_BYTES`, `DAFFY_FLUSH_INTERVAL`, `DAFFY_MAX_BUFFER_BYTES`. With no
+`DAFFY_FLUSH_ROWS`, `DAFFY_FLUSH_INTERVAL`, `DAFFY_MAX_BUFFER_ROWS`. With no
 `SCROOGE_URI`, daffy logs locally only (no shipping).
 
 ## Scrooge — the log aggregator/hoarding service

@@ -81,17 +81,16 @@ def test_flush_retains_rows_when_scrooge_unreachable(make_config: ConfigFactory)
 
 def test_buffer_cap_drops_oldest_when_unreachable(make_config: ConfigFactory) -> None:
     store = LogStore()
-    store.insert_many(_records(20, message="0123456789"))  # ~12 bytes each
+    store.insert_many(_records(20))
     config = make_config(
         scrooge_uri="quack:127.0.0.1:1",
         scrooge_token="x",
-        max_buffer_bytes=10,
+        max_buffer_rows=5,
     )
 
     Shipper(config, store).flush()
 
-    assert store.pending_bytes() <= 10
-    assert store.count() < 20
+    assert store.count() == 5  # trimmed to the cap, oldest dropped
     store.close()
 
 

@@ -60,18 +60,6 @@ class LogStore:
             row = self._conn.execute("SELECT count(*) FROM logs").fetchone()
         return int(row[0]) if row else 0
 
-    def pending_bytes(self) -> int:
-        """Approximate buffered payload size (sum of message byte lengths).
-
-        Used as the flush-size signal instead of the DuckDB file size, which does not
-        shrink predictably after deletes.
-        """
-        with self._lock:
-            row = self._conn.execute(
-                "SELECT coalesce(sum(octet_length(message::BLOB)), 0) FROM logs"
-            ).fetchone()
-        return int(row[0]) if row else 0
-
     def close(self) -> None:
         with self._lock:
             self._conn.close()

@@ -1,7 +1,7 @@
 """Batch-and-flush shipping of buffered logs to Scrooge over the Quack protocol.
 
-The local buffer is bounded: lines accrue until a size threshold (or interval) triggers a
-flush, which uploads the batch as one ``INSERT INTO scrooge.logs SELECT ...`` and then
+The local buffer is bounded: lines accrue until a row-count threshold (or interval)
+triggers a flush, which uploads the batch as one ``INSERT INTO scrooge.logs SELECT ...`` and then
 deletes the flushed rows locally. The INSERT's success is the ack — nothing is deleted
 until it succeeds, so the buffer survives Scrooge downtime. If Scrooge stays unreachable
 and the buffer exceeds its cap, the oldest rows are dropped with a warning.
@@ -22,7 +22,6 @@ log = logging.getLogger("daffy.shipper")
 
 _COLS = ", ".join(COLUMNS)
 _REMOTE = "scrooge"
-_TRIM_BATCH = 1000
 
 
 def _quack_uri(uri: str) -> str:
@@ -54,10 +53,10 @@ class Shipper:
         self.flush()
 
     def maybe_flush(self) -> None:
-        """Flush when the buffered payload has reached the size threshold."""
+        """Flush when the buffer has reached the row-count threshold."""
         if not self._config.shipping_enabled:
             return
-        if self._store.pending_bytes() >= self._config.flush_bytes:
+        if self._store.count() >= self._config.flush_rows:
             self.flush()
 
     def flush(self) -> int:
@@ -130,34 +129,22 @@ class Shipper:
         return True
 
     def _enforce_cap(self, conn: duckdb.DuckDBPyConnection) -> None:
-        trimmed = 0
-        while self._pending_bytes(conn) > self._config.max_buffer_bytes:
-            before = self._count(conn)
-            conn.execute(
-                "DELETE FROM logs WHERE rowid IN "
-                "(SELECT rowid FROM logs ORDER BY capture_time LIMIT ?)",
-                [_TRIM_BATCH],
-            )
-            after = self._count(conn)
-            if after == before:
-                break
-            trimmed += before - after
-        if trimmed:
-            log.warning(
-                "dropped %d oldest buffered rows to stay under %d bytes — "
-                "probable cause: Scrooge unreachable, buffer cap hit",
-                trimmed,
-                self._config.max_buffer_bytes,
-            )
+        excess = self._count(conn) - self._config.max_buffer_rows
+        if excess <= 0:
+            return
+        conn.execute(
+            "DELETE FROM logs WHERE rowid IN "
+            "(SELECT rowid FROM logs ORDER BY capture_time LIMIT ?)",
+            [excess],
+        )
+        log.warning(
+            "dropped %d oldest buffered rows to stay under %d rows — "
+            "probable cause: Scrooge unreachable, buffer cap hit",
+            excess,
+            self._config.max_buffer_rows,
+        )
 
     @staticmethod
     def _count(conn: duckdb.DuckDBPyConnection) -> int:
         row = conn.execute("SELECT count(*) FROM logs").fetchone()
-        return int(row[0]) if row else 0
-
-    @staticmethod
-    def _pending_bytes(conn: duckdb.DuckDBPyConnection) -> int:
-        row = conn.execute(
-            "SELECT coalesce(sum(octet_length(message::BLOB)), 0) FROM logs"
-        ).fetchone()
         return int(row[0]) if row else 0

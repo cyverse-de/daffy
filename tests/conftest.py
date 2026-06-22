@@ -19,9 +19,9 @@ def make_config() -> ConfigFactory:
             "node": None,
             "scrooge_uri": None,
             "scrooge_token": None,
-            "flush_bytes": None,
+            "flush_rows": None,
             "flush_interval": None,
-            "max_buffer_bytes": None,
+            "max_buffer_rows": None,
         }
         kwargs.update(overrides)
         return build_config(**kwargs)  # type: ignore[arg-type]
