@@ -1,0 +1,40 @@
+[project]
+name = "daffy"
+version = "0.1.0"
+description = "Ships and manages log messages stored in DuckDB databases."
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "duckdb>=1.5.3",
+]
+
+[project.scripts]
+daffy = "daffy.cli:main"
+scrooge = "scrooge.cli:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "ruff>=0.6",
+    "pyright>=1.1.380",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/daffy", "src/scrooge"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["src"]
+
+[tool.pyright]
+include = ["src", "tests"]
+pythonVersion = "3.12"
+venvPath = "."
+venv = ".venv"
+
+[tool.ruff]
+src = ["src", "tests"]

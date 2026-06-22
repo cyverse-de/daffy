@@ -1,0 +1,11 @@
+.venv
+.git
+.gitignore
+.pytest_cache
+.ruff_cache
+__pycache__
+*.pyc
+tests
+scrooge
+*.duckdb
+*.duckdb.wal

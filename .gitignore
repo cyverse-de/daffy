@@ -1,0 +1,11 @@
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+.pyright/
+
+# Local Scrooge state
+/scrooge/
+*.duckdb
+*.duckdb.wal
