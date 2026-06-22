@@ -65,12 +65,18 @@ Scrooge only aggregates and serves the logs it knows about — it never queries 
 daffy instances. Clients query over Quack: `ATTACH` Scrooge and `SELECT` from the
 `all_logs` view, which transparently unions the live table and the Parquet archive.
 
+Because uploads are handled inside the embedded Quack server, Scrooge observes them via
+Quack's own logging (`enable_logging('Quack')`): a background monitor tails the server log
+and emits a line when a daffy connects and when each upload completes (with its duration).
+Tune the poll cadence with `--monitor-interval` / `SCROOGE_MONITOR_INTERVAL`.
+
 ```
 uv run scrooge --storage-dir ./scrooge --quack-port 9494 --token my-shared-token
 ```
 
 Configuration (env-first): `SCROOGE_DB`, `SCROOGE_STORAGE_DIR`, `SCROOGE_QUACK_HOST`,
-`SCROOGE_QUACK_PORT`, `SCROOGE_TOKEN`, `SCROOGE_RETENTION_ROWS`, `SCROOGE_SWEEP_INTERVAL`.
+`SCROOGE_QUACK_PORT`, `SCROOGE_TOKEN`, `SCROOGE_RETENTION_ROWS`, `SCROOGE_SWEEP_INTERVAL`,
+`SCROOGE_MONITOR_INTERVAL`.
 Set a fixed `--token`/`SCROOGE_TOKEN` so daffy instances can be provisioned with it;
 otherwise `quack_serve` issues a random token at each boot.
 

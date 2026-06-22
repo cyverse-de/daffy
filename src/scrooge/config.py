@@ -11,6 +11,7 @@ DEFAULT_QUACK_HOST = "0.0.0.0"
 DEFAULT_QUACK_PORT = 9494
 DEFAULT_RETENTION_ROWS = 100_000
 DEFAULT_SWEEP_INTERVAL = 10.0
+DEFAULT_MONITOR_INTERVAL = 2.0
 
 
 @dataclass(slots=True)
@@ -22,6 +23,7 @@ class ScroogeConfig:
     token: str | None
     retention_rows: int
     sweep_interval: float
+    monitor_interval: float
 
     @property
     def listen_uri(self) -> str:
@@ -55,6 +57,7 @@ def build_config(
     token: str | None = None,
     retention_rows: int | None = None,
     sweep_interval: float | None = None,
+    monitor_interval: float | None = None,
 ) -> ScroogeConfig:
     return ScroogeConfig(
         db_path=_resolve("SCROOGE_DB", db_path, DEFAULT_DB_PATH) or DEFAULT_DB_PATH,
@@ -66,4 +69,7 @@ def build_config(
         token=_resolve("SCROOGE_TOKEN", token, None),
         retention_rows=_resolve_int("SCROOGE_RETENTION_ROWS", retention_rows, DEFAULT_RETENTION_ROWS),
         sweep_interval=_resolve_float("SCROOGE_SWEEP_INTERVAL", sweep_interval, DEFAULT_SWEEP_INTERVAL),
+        monitor_interval=_resolve_float(
+            "SCROOGE_MONITOR_INTERVAL", monitor_interval, DEFAULT_MONITOR_INTERVAL
+        ),
     )

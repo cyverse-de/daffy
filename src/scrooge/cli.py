@@ -11,6 +11,7 @@ from collections.abc import Sequence
 
 from scrooge.config import (
     DEFAULT_DB_PATH,
+    DEFAULT_MONITOR_INTERVAL,
     DEFAULT_QUACK_HOST,
     DEFAULT_QUACK_PORT,
     DEFAULT_RETENTION_ROWS,
@@ -19,6 +20,7 @@ from scrooge.config import (
     ScroogeConfig,
     build_config,
 )
+from scrooge.monitor import QuackLogMonitor
 from scrooge.server import ScroogeServer
 
 log = logging.getLogger("scrooge")
@@ -61,6 +63,11 @@ def _parse_args(args: list[str]) -> argparse.Namespace:
         type=float,
         help=f"seconds between retention sweeps (or SCROOGE_SWEEP_INTERVAL; default: {DEFAULT_SWEEP_INTERVAL})",
     )
+    parser.add_argument(
+        "--monitor-interval",
+        type=float,
+        help=f"seconds between upload-log polls (or SCROOGE_MONITOR_INTERVAL; default: {DEFAULT_MONITOR_INTERVAL})",
+    )
     return parser.parse_args(args)
 
 
@@ -73,6 +80,7 @@ def _config_from_args(ns: argparse.Namespace) -> ScroogeConfig:
         token=ns.token,
         retention_rows=ns.retention_rows,
         sweep_interval=ns.sweep_interval,
+        monitor_interval=ns.monitor_interval,
     )
 
 
@@ -91,10 +99,13 @@ def main(argv: Sequence[str] | None = None) -> int:
     signal.signal(signal.SIGINT, _stop)
 
     server.start()
+    monitor = QuackLogMonitor(server, config.monitor_interval)
+    monitor.start()
     try:
         while not shutdown.wait(timeout=config.sweep_interval):
             server.sweep()
     finally:
+        monitor.stop()
         server.sweep()
         server.stop()
     return 0
