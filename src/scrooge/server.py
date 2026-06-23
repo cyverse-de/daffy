@@ -10,6 +10,7 @@ from pathlib import Path
 import duckdb
 
 from daffy.schema import COLUMNS, ensure_schema
+from daffy.sql import sql_literal
 from daffy.store import load_quack
 from scrooge import retention
 from scrooge.config import ScroogeConfig
@@ -17,10 +18,6 @@ from scrooge.config import ScroogeConfig
 log = logging.getLogger("scrooge")
 
 _SELECT_COLS = ", ".join(COLUMNS)
-
-
-def _sql_str(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"
 
 
 class ScroogeServer:
@@ -40,9 +37,9 @@ class ScroogeServer:
         Path(self.config.storage_dir).mkdir(parents=True, exist_ok=True)
         with self._lock:
             self.conn.execute("CALL enable_logging('Quack')")
-            call = f"CALL quack_serve({_sql_str(self.config.listen_uri)}, allow_other_hostname => true"
+            call = f"CALL quack_serve({sql_literal(self.config.listen_uri)}, allow_other_hostname => true"
             if self.config.token:
-                call += f", token => {_sql_str(self.config.token)}"
+                call += f", token => {sql_literal(self.config.token)}"
             call += ")"
             row = self.conn.execute(call).fetchone()
             # quack_serve returns (listen_uri, http_url, auth_token)
@@ -62,7 +59,7 @@ class ScroogeServer:
                 f"CREATE OR REPLACE VIEW all_logs AS "
                 f"SELECT {_SELECT_COLS} FROM logs "
                 f"UNION ALL "
-                f"SELECT {_SELECT_COLS} FROM read_parquet({_sql_str(pattern)}, union_by_name => true)"
+                f"SELECT {_SELECT_COLS} FROM read_parquet({sql_literal(pattern)}, union_by_name => true)"
             )
         else:
             sql = f"CREATE OR REPLACE VIEW all_logs AS SELECT {_SELECT_COLS} FROM logs"
@@ -102,7 +99,7 @@ class ScroogeServer:
     def stop(self) -> None:
         with self._lock:
             try:
-                self.conn.execute(f"CALL quack_stop({_sql_str(self.config.listen_uri)})")
+                self.conn.execute(f"CALL quack_stop({sql_literal(self.config.listen_uri)})")
             except duckdb.Error:
                 pass
             self.conn.close()

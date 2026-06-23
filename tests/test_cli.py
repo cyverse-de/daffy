@@ -25,6 +25,12 @@ def test_main_requires_command() -> None:
     assert main(["--service", "demo"]) == 2
 
 
+def test_main_reports_missing_command(capfd: pytest.CaptureFixture[str]) -> None:
+    rc = main(["--service", "demo", "--", "this-command-does-not-exist-xyz"])
+    assert rc == 127
+    assert "command not found" in capfd.readouterr().err
+
+
 def test_main_requires_service(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("SERVICE_NAME", raising=False)
     assert main(["--", "true"]) == 2

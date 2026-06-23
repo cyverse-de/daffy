@@ -100,6 +100,12 @@ def main(argv: Sequence[str] | None = None) -> int:
     try:
         shipper.start()
         returncode = Wrapper(config, store, on_records_written=shipper.maybe_flush).run(command)
+    except FileNotFoundError:
+        print(f"daffy: command not found: {command[0]}", file=sys.stderr)
+        return 127
+    except PermissionError:
+        print(f"daffy: permission denied: {command[0]}", file=sys.stderr)
+        return 126
     finally:
         shipper.close()
         store.close()

@@ -16,6 +16,7 @@ import duckdb
 
 from daffy.config import Config
 from daffy.schema import COLUMNS
+from daffy.sql import sql_literal
 from daffy.store import LogStore, load_quack
 
 log = logging.getLogger("daffy.shipper")
@@ -26,10 +27,6 @@ _REMOTE = "scrooge"
 
 def _quack_uri(uri: str) -> str:
     return uri if uri.startswith("quack:") else f"quack:{uri}"
-
-
-def _sql_str(value: str) -> str:
-    return "'" + value.replace("'", "''") + "'"
 
 
 class Shipper:
@@ -112,9 +109,9 @@ class Shipper:
             return True
         assert self._config.scrooge_uri is not None
         uri = _quack_uri(self._config.scrooge_uri)
-        attach = f"ATTACH {_sql_str(uri)} AS {_REMOTE}"
+        attach = f"ATTACH {sql_literal(uri)} AS {_REMOTE}"
         if self._config.scrooge_token:
-            attach += f" (TOKEN {_sql_str(self._config.scrooge_token)})"
+            attach += f" (TOKEN {sql_literal(self._config.scrooge_token)})"
         try:
             load_quack(conn)
             try:
