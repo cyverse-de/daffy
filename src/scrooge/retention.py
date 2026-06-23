@@ -13,13 +13,9 @@ from pathlib import Path
 import duckdb
 
 from daffy.schema import COLUMNS
+from daffy.sql import sql_literal
 
 _SELECT_COLS = ", ".join(COLUMNS)
-
-
-def _sql_str(value: str) -> str:
-    """Quote a string for safe inline use in SQL (single quotes doubled)."""
-    return "'" + value.replace("'", "''") + "'"
 
 
 def service_dir(storage_dir: str | Path, service: str) -> Path:
@@ -45,10 +41,10 @@ def export_day(conn: duckdb.DuckDBPyConnection, storage_dir: str | Path, service
     seq = _next_sequence(directory, day_str, service_lower)
     out_path = directory / f"{day_str}-{seq:03d}_{service_lower}.parquet"
 
-    predicate = f"service = {_sql_str(service)} AND capture_time::date = DATE {_sql_str(day_str)}"
+    predicate = f"service = {sql_literal(service)} AND capture_time::date = DATE {sql_literal(day_str)}"
     conn.execute(
         f"COPY (SELECT {_SELECT_COLS} FROM logs WHERE {predicate} ORDER BY capture_time) "
-        f"TO {_sql_str(str(out_path))} (FORMAT PARQUET)"
+        f"TO {sql_literal(str(out_path))} (FORMAT PARQUET)"
     )
     conn.execute(f"DELETE FROM logs WHERE {predicate}")
     return out_path
